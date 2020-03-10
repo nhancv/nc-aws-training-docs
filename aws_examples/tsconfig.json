@@ -4,10 +4,11 @@
     "declaration": false,
     "esModuleInterop": true,
     "strict": true,
+    "noImplicitAny": false,
     "removeComments": true,
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
-    "target": "es2017", // es5
+    "target": "es2017",
     "sourceMap": true,
     "outDir": "./dist",
     "baseUrl": "./",
