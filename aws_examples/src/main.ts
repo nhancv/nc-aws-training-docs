@@ -10,6 +10,7 @@ async function bootstrap() {
     // await app.listen(3000);
     // application logic...
     console.log('HelloWorld');
+    console.log(process.env.NODE_ENV);
 
 }
 
