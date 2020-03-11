@@ -1,15 +1,9 @@
 import {NestFactory} from '@nestjs/core';
-import {FastifyAdapter, NestFastifyApplication,} from '@nestjs/platform-fastify';
 import {AppModule} from './app.module';
 import {S3Service} from "./aws/s3/s3.service";
 
 async function bootstrap() {
-    const app = await NestFactory.create<NestFastifyApplication>(
-        AppModule,
-        new FastifyAdapter()
-    );
-    // await app.listen(3000);
-    // application logic...
+    const app = await NestFactory.create(AppModule);
     const s3Service = app.get(S3Service);
     const listBuckets = await s3Service.listBuckets();
     console.log({listBuckets});
