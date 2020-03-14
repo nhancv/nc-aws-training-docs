@@ -34,12 +34,11 @@
         var Policy = getParameterByName("BPolicy");
         var KeyPairId = getParameterByName("BKey-Pair-Id");
         var Signature = getParameterByName("BSignature");
-        var Path = getParameterByName("BPath");
-        if(Policy && KeyPairId && Signature && Path) {
-            document.cookie = "CloudFront-Policy=" + Policy + "; path=/" + Path;
-            document.cookie = "CloudFront-Key-Pair-Id=" + KeyPairId + "; path=/" + Path;
-            document.cookie = "CloudFront-Signature=" + Signature + "; path=/" + Path;
-            window.location.href = "/" + Path + "/index.html"
+        if(Policy && KeyPairId && Signature) {
+            document.cookie = "CloudFront-Policy=" + Policy + "; path=/";
+            document.cookie = "CloudFront-Key-Pair-Id=" + KeyPairId + "; path=/";
+            document.cookie = "CloudFront-Signature=" + Signature + "; path=/";
+            window.location.href = "/index.html"
         } else {
             deleteAllCookies();
             window.location.href = "/";
