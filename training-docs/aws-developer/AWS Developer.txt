@@ -1,0 +1,34 @@
+AWS Simple Store Service (S3)
+Amazon Simple Queue Service (SQS)
+- Amazon SQS max message size is 256KB
+
+
+Amazon Simple Notification Service (SNS)
+
+Amazon Simple Workflow Service (SWF)
+Amzon Elastic Compute Cloud (EC2)
+Amazon DynamoDB
+- What is one key difference between a global secondary index and a local secondary index?
+=> A local secondary index must have the same partition key as the main table
+
+- How many secondary indexes (global and local combined) are allowed per table? (by default)
+=> You can define up to 5 local secondary indexes and 20 global secondary indexes per table (by default) - for a total of 25.
+
+- How many tables can an AWS account have per region?
+=> The current default limit is 256 per region. Table limits can be increased by contacting AWS.
+
+Let us suppose, we specify a value for Reservoir Rate as 60, and Fixed Rate as 20. Now, if your application receives 200 requests in a second, then the total number of requests that would be traced or sampled will be: - 
+"Reservoir Rate" + Fixed Rate % [(Total Requests - Reservoir Rate)] 
+- 60 + (200-60) * 20%
+- 60 + 28 
+- 88
+
+
+
+AWS Elastic Beanstalk
+AWS CloudFormation
+Other developer-related AWS services
+
+
+
+

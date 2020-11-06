@@ -1,0 +1,550 @@
+IAM
+Identity policies attached to IAM users, roles, or groups can include S3 elements.
+Resource policies apply to a resource. They can be used to authorize access to a bucket or objects inside a bucket to large numbers of identities. Bucket policies can also apply to anonymous accesses (public access).
+IAM Roles => Create role that the trusted entiry (service/another AWS account/Web identity/SAML) keep the specific policies of resources (AWSS3FullAccess, AWSDynamoFullAccess, ...) to use the appropriate resources  
+AWS SSO automatically creates IAM roles in each assigned account for each permission set, and configures these roles with a maximum session duration of 12 hours.
+
+AWS Organisation
++ SCP will block access to Amazon S3 bucket to all accounts within Singapore region including root users of each accounts within AWS Organisation & not to users outside this region who have access to S3 bucket.
++ For accounts which are part of AWS Organisation, Resource sharing can be done on an individual account basis in case resource sharing is not enabled at AWS Organisation level.  With this, resources are shared within accounts as external accounts & an invitation needs to be shared between these accounts to start resource sharing.
++ For sharing AWS Resources with AWS Resource Access Manager, sharing needs to be enabled with the master account of AWS Organisation. Only resources that are owned by the account are shared with other accounts & resources are not re-shared from other accounts.
++ SCP policy, other instance types may be allowed as well since by default an AWS Organization has an SCP that allows full AWS access => Use Effect "Deny" not "Allow"
++ Resource Access Manager is an AWS service to centrally manage resources so that you can easily specify which accounts or Organizations can access the resources.
++ Consolidated Billing for Organizations benefits: 
+- One bill, Easy tracking, Combined usage to shared vol pricing discount, No extra fee
+
+
+EC2
++ EC2 families are general purpose, compute optimized, memory optimized, storage optimized, and accelerated computing.
++ Private IP: ip-X.X.X.X.ec2.internal
++ Public DNS: ec2-X-X-X-X.compute-1.amazonaws.com
++ Instance types include:
+- T2 and T3: Low-cost instance types that provide burst capability
+- M5: For general workloads
+- C4: Provides more capable CPU
+- X1 and R4: Optimize large amounts of fast memory
+- I3: Delivers fast IO
+- P2, G3, and F1: Deliver GPU and FPGAs
++ Instance sizes include nano, micro, small, medium, large, x.large, 2x.large, and larger.
++ Special Cases
+- "a": Use AMD CPUs
+- "A": Arm based
++ EBS: persistent, attached and removed, replicated within single AZ, throughput of 1,750MiB/s and 80,000 IOPS
+- Mechanical sc1 and st 1; Solid State gp2 and io1
+- sc1: Lowest cost, infrequent access, can't be boot volume
+- st1: Low cost, throughput intensive, can't be a boot volume
+- gp2: Default, balance of IOPS/MiB/s - burst pool IOPS per GB
+- io1: Highest performance, can adjust size and IOPS separately
+64,000 IOPS for EBS volumes and 80,000 IOPS for EC2 Optimized instances
+General Purpose SSD (gp2): for most workloads, system boot vol, Virutal desktop, latency interactive apps, Development and testing, max 16k IOPS
+IOPS (io1): more than 16k IOPS or 250 MB/s, large database workload
+Amazon Data Lifecycle Manager (DLM) for EBS Snapshots
+When an EC2 instance is in Hibernate state, you pay only for the EBS volumes and Elastic IP Addresses attached to it.
+Enable termination protection using DisableApiTermination
+
++ Auto scaling group
+min 1 desire 1 max 1 gọi là auto-healing
+- 1 VPC, multi subnet
+- Scaling policy: 
+target tracking scaling policy: CPU, Network, Load balancer request count
+simple scaling policy: use CloudWatch alarm 
+scaling policy with steps: use CloudWatch alarm with steps
+- Lifecycle Hooks puts the instance into wait state before termination. Default Wait period is 1 hour.
++ EC2 Hibernate is not supported with EC2 instance in tha Auto Scaling Group/Instance store volume, it requires root volumes as AWS EBS
+
++ Instance Metadata:
+Meta-data url, using curl: 
+http://169.254.169.254/latest/meta-data
+- Get AMI: /ami-id
+- Instance ID: /instance-id
+- Instance type: /instance-type
+
++ Security Groups
+Only for set allow rule for inbound/outbound rules
++ Enhanced networking use SR-IOV: EC2 delivers this via the Elastic Network Adapter (ENA) or Intel 82599 Virtual Function (VF) interface.
++ Cluster Placement Group: for single AZ, group of multi ec2 instances
++ Partition Placement Group: span multi AZs, instances grouped by partition, max 7 partitions per AZ
++ Spread Placement Group: Multi AZs, instance not grouped, just spread in group, max 7 instances per AZ
++ EC2 Hibernation
+
+AWS SQS
++ For reliable
++ Even though SQS guarantees the order of messages for FIFO queues, the main reason for using it is because it helps in horizontal scaling of AWS resources and is used for decoupling systems. 
+
+VPC
+regional, 5 VPC per region, CIDR range: Min /28, Max /16
++ Internet Gateway: Only 1 IGW per VPC
++ Route table: 1 RT per subnet
++ NACLs: at Layer4, can explicitly allow or deny traffic, the "*" rule is processed last is implicit deny
++ VPC endpoints: to connect to AWS service without attached internet gateway
++ VPC Endpoint types: 
+- Gateway endpoint: for DynamoDB and S3
+- Interface endpoint: for others
++ AWS PrivateLink provides secure private access to various AWS services by adding an Elastic Network Interface within a VPC. AWS creates a local/ regional DNS entry which resolves to the local IP address assigned to ENI. To create establish connectivity between VPC in a region
++ VPC peering: connect 2 VPC span region
++ VPC Classiclink: For the communication between EC2-Classic instance and resources in VPC
++ High Performance Computing (HPC) and machine learning application
+- With Elastic Fabric Adapter (EFA), users can get a better performance if compared with enhanced networking (Elastic Network Adapter) or Elastic Network Interface. Check the differences between EFAs and ENAs in https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/efa.html
+
+S3
++ Max file size is 5GB per uploaded part
++ Policy: 
+- Block public access: it can disallow all public access granted to bucket
+- Bucket policy: apply to bucket and object via policy statement script
+- ACL: Set permission (List, Write, Read) to bucket or objects
++ Storage class/tier: sort by pricing
+- Standard: Default, expensive, ~100% availability, Replicated all AZs
+- Standard Infrequent Access (Standard-IA): 3+ AZ replication, 30-day and 128 KB minimum, cheaper Standard
+- One Zone-IA: 1 AZ, 30-day and 128 KB minimum 
+- Glacier: 3+ AZ replication, 90-day and 40 KB minimum, Retrievals could take minutes or hours, query with SQL schema
+- Glacier Deep Archive: 180-day and 40 KB minimums
++ Storage classes can be controlled via lifecycle rules: 
+- INTELLIGENT_TIERING: minimum object size is 128KB, origin storage class need minimum of 30 days to move to IA
+- IA designed for unknown or unpredictable access patterns. It moves objects automatically between two tiers, one designed for frequent access, the other for infrequent.
+- Amazon Glacier class: 
+Expedited retrievals allow you to access data in 1–5 minutes for a flat rate of $0.03 per GB retrieved. Expedited retrievals allow you to quickly access your data when occasional urgent requests for a subset of archives are required.
+The Vault Lock and Standard Retrieval are standard with 3-5 hours retrieval time
+Bulk retrievals which can be considered the cheapest option have 5-12 hours retrieval time. 
+Enable Cross-Region Replication for the bucket
+
+AWS CloudFormation 
++ Drift Detection can be used to detect changes made to AWS resources outside the CloudFormation Templates. AWS CloudFormation Drift Detection only checks property values that are explicitly set by stack templates or by specifying template parameters. It does not determine drift for property values that are set by default. To determine drift for these resources, you can explicitly set property values which can be the same as that of the default value.
+
+Vertical scaling is achieved by adding additional resources in the form of CPU or memory to an existing machine.
+Horizontal Scaling is achieved by adding additional machines into a pool of resources, each of which provides the same service
+
+AWS Redshift
+- Available in different regions
+- Encryption using KMS Customer Master key and Hardward security module HSM
+- Monitor Redshift Clusters using CloudWatch and AWS Trusted Advisor
+
+Route 53
++ Multivalue answer: 1 domain point to multi dns backend
++ Weighted:
++ Simple
++ Latency
+
+DynamoDB
++ DynamoDB Stream: listen change on DynamoDB Table and trigger AWS Lambda function
+DynamoDb read/write calculation and GSI (Global Secondary Index) vs LSI (Local Secondary Indexes)
+Read Capacity Unit (RCU) = 4KB in strongly consistent mode, and 2 reads of 4KB per seconds for 1 RCU in default mode (eventual mode) => need / 2 to get eventual RCU as default
+Provisioned Throughput Calculations
+A system needs to store 60 patient records of 1.5 KB, each, every minute. What WCU should you allocate on the patient record table?
+- 60 records per minute = ~1 per second (and the DDB RCU/WCU buffer can smooth this out if not)
+- Each record is 1.5 KB. 1 WCU = 1 KB per second, so each record requires 2 WCU.
+- A WCU setting of 2 is required on the table.
+A weather application reads data from a DynamoDB table. Each item in the table is 7 KB in size. How many RCUs should be set on the table to allow for 10 reads per second?
+- 1 item is 7KB, which is 2 RCU(1RCUis4KB).
+- 10 reads per second for 7 KB items = 20 RCU
+- But the question didn't specify if eventual or strong
+consistency is required. The default is eventual, which allows
+for 2 reads of 4 KB per second for 1 RCU.
+- Assuming eventually consistent reads, the answer is 10 RCU.
+------
+Read → 4kb; Write → 1 kb
+Tính ra per seconds
+number of rows x (round of 4kb/1kb)
+Read : eventual = RCU / 2
+Eg: 100 items, each item cost 1.5kb per seconds ? How many read provision need ?
+=> 100 x 4 = 400 read provision / 2
+
+CloudFront
++ Using Origin Access Identity (OAI) to prevent user view files directly with S3 url using object ACL's
++ For RTMP distribution, Signed URLs can be used to control access to private content. While specifying periods with Signed URLs, start time & date is optional while end time date / time is required. Also, we can specify the IP address range of users who need to have access to this RTMP application.
++ If you run PCI or HIPAA-compliant workloads based on the AWS Shared Responsibility Model, we recommend that you log your CloudFront usage data for the last 365 days for future auditing purposes. To log usage data, you can do the following:
+Enable CloudFront access logs.
+Capture requests that are sent to the CloudFront API.
+
+Snowball
++ Ideal for TB or PB data transfers ? 50 TB or 80 TB capacity per Snowball
++ AWS Data Sync is a secure way of online data transfer from on-premises to S3 Glacier.
++ AWS Snowball Edge is a secure way of online data transfer.
++ Amazon S3 Transfer Acceleration can be used for applications which have already integrated with Amazon S3 API.
++ AWS Transfer is a better choice for transferring SFTP data between on-premise & Amazon S3.
+
+AWS Cognito Identity
++ Support OpenID Connect (OIDC) via SAML provider
++ Support guest user
+
+AWS Aurora
++ Multi AZ
++ Read Replica in different AWS Region
+
+AWS Managed Microsoft AD can be used as the Active Directory over VPN or Direct Connect
+AWS Directory Service enables your end-users to use their existing corporate credentials while accessing AWS applications.
+Simple Active Directory (simple AD) provides a subset of the features offered by AWS Managed Microsoft AD
+AWS OpsWorks Stacks lets you manage applications and servers on AWS and on-premises. With OpsWorks Stacks, you can model your application as a stack containing different layers, such as load balancing, database, and application server. You can deploy and configure Amazon EC2 instances in each layer or connect other resources such as Amazon RDS databases. 
+The Fargate launch type allows you to run your containerized applications without the need to provision and manage the backend infrastructure. Just register your task definition and Fargate launches the container for you.
+Use Vault Lock Policy to deny delete permission for 3 years updating policy once initially & use Vault Access Policy to permit read access to third -party vendors updating this policy monthly.
+Create an Elastic Beanstalk environment with the necessary Docker containers.
+The internet uses a routing protocol called Border Gateway Protocol (BGP)
+AWS DataSync to move large amounts of data online between on-premises storage and Amazon S3, Amazon Elastic File System (Amazon EFS), or Amazon FSx for Windows File Server.
+AWS Glue keeps a track of processed data using Job Bookmark. Enabling Job Bookmark will help to scan only changes since the last bookmark and prevent the processing of whole data again.
+Cached volumes:  – You store your data in Amazon Simple Storage Service (Amazon S3) and retain a copy of frequently accessed data subsets locally. Cached volumes offer substantial cost savings on primary storage and minimize the need to scale your storage on-premises. You also retain low-latency access to your frequently accessed data.
+Stored volumes:  – If you need low-latency access to your entire dataset, first configure your on-premises gateway to store all your data locally. Then asynchronously back up point-in-time snapshots of this data to Amazon S3.
+
+Open Systems Interconnection (OSI) layer 7 -> 1: Application -> Presentation -> Session -> Transport -> Network -> Data Link -> Physical
+At Layer 1 (Physical), networks use a shared medium where devices can transmit signals and listen
+Layer 2 (Data Link) adds MAC addresses (01-23-45-67-89-AB-CD-EF) that can be used for named communication between two devices on a local network.
+The Network Layer (L3) allows for unique device-to-device communication over interconnected networks. L3 devices can pass packets over tens or even hundreds of L2 networks. 
+L4 (Transport) adds TCP and UDP. TCP is designed for reliable transport,and UDPisaimed at speed.TCPusessegmentsto ensure data is received in the correct order and adds error checking and "ports," allowing different streams of communications to the same host (e.g., tcp/22 and tcp/80).
+L5 (Session) adds the concept of sessions, so that request and reply communication streams are viewed as a single "session" of communication between client and server.
+L6 (Present at ion) adds data conversion, encryption, compression, and standards that L7 can use. 
+L7 (Applicat ion) is where protocols (such as HTTP, SSH, and FTP) are added. For example, HTTP (L7) running over TLS (L6) is HTTPS.
+Class A (/8): 1.0.0.0 to 126.255.255.255 ? 126 networks, 16,777,214 nodes in each (+2 reserved)
+Class B (/16): 128.0.0.0 to 191.255.255.255 ? 65,534 nodes in each (+2 reserved).
+Class C (/24): 192.0.0.0 to 223.255.255.255 ? 254 nodes in each (+2 reserved)
+IP classes have a number of ranges within them used for private networking only:
+- 10.0.0.0 to 10.255.255.255: Private networking within the Class A range
+- 172.16.0.0 to 172.31.255.255: Private networking within the Class B range (16 Class B networks)
+- 192.168.0.0 to 192.168.255.255: Private networking within the Class C range (256 Class C networks)
+Local device-to-device communication takes place using L1 (Physical) and L2 (Data Link) using MAC addresses and physical 0's and 1's.
+
+Process log from EC2: use s3 for storing and Amazon EMR for processing
+Monitoring AWS Redshift using CloudWatch and CloudTrail
+AWS CloudHSM Cluster Backups:
++ Ephemeral backup key (EBK) is used to encrypt data & Persistent backup key (PBK) is used to encrypt EBK before saving data to the Amazon S3 bucket in the same region as that of AWS CloudHSM cluster.
+
+Blue-Green for two environment using Route 53 Weighted policy
+Amazon CloudFront is a global service for which events are delivered to CloudTrail trails which include global services. To avoid duplicate Amazon CloudFront events, you can disable these events from delivering to CloudTrail trails in all regions & enable in only one region using AWS CLI
+CloudFront Query String Forwarding only supports Web distribution. For query string forwarding, the delimiter character must be always a '&' character. Parameters' names and values used in the query string are case sensitive.
+Lexicons are specific to a region. You will need to upload Lexicon in each region where you need to use it. For a single text which appears multiple times in the content, you can create an alias using multiple Lexicons to have different speech.
+Using SSML tags, we can control the speech generated by Amazon Polly. In the above example, using SSML tags, convert commas to period & tag words and paragraphs as “Strong”, will help to control the speech speed, adds appropriate pause & emphasis on appropriate words slowing speaking rate.
+If you need an AMI across multiple regions, you have to copy the AMI across regions. Note that, by default, AMIs that you have created will not be available across all regions.
+Enable Cross-Region snapshots for the Redshift Cluster.
+You can use Amazon Polly to generate speech from either plain text or from documents marked up with Speech Synthesis Markup Language (SSML). Using SSML-enhanced text gives you additional control over how Amazon Polly generates speech from the text you provide.
+Since by default, EBS Volumes are replicated within their Availability Zones.
+
+
+
+
+
+---
+USE CASE
+A company needs to extend its storage infrastructure to the AWS Cloud. The storage needs to be available as iSCSI devices for on-premises application servers. What should be done to fulfill this requirement?
+-> Use the AWS Storage Gateway-cached volumes service.
+Large amount of data is saved in these S3 buckets which makes its cumbersome to download whole data & retrieve only a small amount of information from it. The IT Team is looking for your consultation for this issue without incurring additional cost or compromising on security. Which of the following actions is recommended for resolution?
+-> Store objects in JSON format compressing it with GZIP using server-side encryption. Use Amazon S3 Select to retrieve a subset of data.
+The Developers Team is working on a new application for which they will be launching a large number of EC2 Instance. To decrease time in launching all these EC2 instances they want you to pre-warm these instances & keep ready for launching with all required patches & software. Which of the following can be done to meet this requirement?
+-> Launch an Amazon EC2 instance with Amazon EBS root volume & enable Hibernate.
+You have two AWS Organizations. All the AWS accounts in Organization A need to be moved to Organization B. You have already moved all the member accounts and now you need to migrate the master account. Which of the following options should you choose?
+-> Delete Organization A and invite the master account to join Organization B.
+In order to manage a large number of AWS accounts in a better way, you create a new AWS Organization and invite these accounts. You only enable the “Consolidated billing” feature set in the organization. Which of the below features does the AWS Organization have?
+-> Combine the usage across all accounts to share the volume pricing discounts.
+By default, CloudTrail event log files are encrypted using Amazon S3 server-side encryption (SSE). You can also choose to encrypt your log files with an AWS Key Management Service (AWS KMS) key. You can store your log files in your bucket for as long as you want. You can also define Amazon S3 lifecycle rules to archive or delete log files automatically. If you want notifications about log file delivery and validation, you can set up Amazon SNS notifications.
+
+S3 policy for Cloud Front
+{
+    "Effect": "Allow",
+    "Principal": {
+        "AWS": "arn:aws:iam::cloudfront:user/CloudFront Origin Access Identity XXXX1234567890"
+    },
+    "Action": "s3:GetObject",
+    "Resource": "arn:aws:s3:::aws-example-bucket/*"
+}
+
+Security review: using CloudTrail and CloudWatch
+After you enable CloudTrail log file integrity, it will create a hash file called digest file which refers to logs that are generated. This digest file is saved in different folder in S3 bucket where log files are saved. Each of these digest files has the private key of public & private key pair. The DIgest file can be validated using the public key. This feature ensures that all the modifications made to CloudTrail log files are recorded. 
+ResourceID.MemberID.NetworkID.managedblockchain.us-east-1.amazonaws.com:PortNumber
+This application interacts with a DynamoDB table. Which of the following is the correct and MOST SECURE way to ensure that the application interacts with the DynamoDB table?
+-> Create a role which has the necessary permissions and can be assumed by the EC2 instance
+Your company has a web application hosted in AWS that makes use of an Application Load Balancer. You need to ensure that the web application is protected from web-based attacks such as cross site scripting etc.
+-> Use the WAF service in front of the web application, AWS WAF is a web application firewall that helps protect your web applications from common web exploits that could affect application availability.
+AWS CloudHSM is a cloud-based hardware security module (HSM) that enables you to easily generate and use your own encryption keys on the AWS Cloud. With CloudHSM, you can manage your own encryption keys using FIPS 140-2 Level 3 validated HSMs
+Network Load Balancer can be used to terminate TLS connections instead of back end instance reducing load on this instance. With Network Load Balancers, millions of  simultaneous sessions can be established with no impact on latency along with preserving client IP address. To negotiate TLS connections with clients, NLB uses a security policy which consists of protocols & ciphers.
+Network Load Balancer requires one certificate per TLS connection to encrypt traffic between client & NLB , & forward decrypted traffic to target servers. Using  AWS Certificate Manager is a preferred option, as these certificates are automatically renewed on expiry.
+
+
+
+
+
+
+How much bandwidth can a NAT gateway support?
+-> Individual NAT gateways can handle 5 Gbps of bandwidth and can scale up to 45 Gbps.
+
+Dynamic NATs should live in a (VPC + Public subnet)
+What entities are included when a default VPC is created?
+-> Security Group, DHCP, Public Subnet, An attached internet gateway, NACL
+
+internet gateway (IGW) has to have routing rules added to the route table for resources in a public subnet to reach the internet, these rules are not automatically created.
+
+Which rules are present in a default NACL?
+-> Rule * which implicitly denies all traffic. 
+-> Rule 100 which allows all traffic.
+
+Which is the CIDR block address given when creating a default VPC?
+-> 172.31.0.0/16
+
+Which are reserved IPs within a subnet?
+-> .0 Network, .1 Router, .2 DNS, .3 Future, .X Broadcast
+
+You've set up a private EC2 instance to have limited outbound access to the internet by way of a NAT gateway. You ping a public IP from the private EC2 instance and receive a response. Why does the NAT gateway allow this inbound response?
+-> NAT gateways understand and allow session traffic.
+
+What characteristics are present when sharing subnets?
+-> Other allowed AWS accounts can launch resources in a shared subnet.
+
+Dynamic NATs are not highly available by nature. Architecturally, how can you create a highly available environment if a failure occurs in an Availability Zone?
+-> create one Dynamic NAT per Availability Zones
+
+When would it be appropriate to use Network ACLs?
+-> when needing control access to a whole subnet + when needing to specifically deny certain traffic to a single IP or a range of IPs
+
+VPC peers are used to link two VPCs at layer 3: company mergers,
+shared services, company and vendor, auditing.
+Network ACL place at layer 4 Transport while security group place at layer 5
+
+VPCEndpoint Types:
+- Gateway endpoints: Can be used for DynamoDB and S3
+- Interface endpoints: Can be used for everything else (e.g., SNS, SQS)
+
+What type of IP address can attach to an operating system?
+-> IPv6
+
+What option best describes what an Egress-Only Gateway is used for in a VPC?
+-> IPv6 traffic from your instances to the Internet. Internet initiated traffic to those instances is blocked.
+
+When would you use a VPC endpoint?
+-> When a private subnet does not use a NAT but wants to reach a public endpoints
+-> When a private instance wants to access a public AWS endpoint
+
+When using VPC peering, which option would you enable for public DNS to private IP resolution?
+-> Enable DNS settings in the Peer Connections menu to resolve public DNS to private IPs
+
+Config ping between two instance inside public vpc via VPC peering: 
+- Update Route Tables: add route with vpc peering connection type
+- Update NACLs
+- Update Security
+- Do the same for both vpc
+
+A health check can monitor the health of an HTTP or HTTPS page every 10 and 30 seconds
+What is a name server?
+-> name servers can be authoritative or non-authoritative
+-> A server that runs a DNS service and can store or cache information for the DNS platform
+
+Which record maps domain names to their IPv4 address?
+-> A record
+
+What does the period at the end of a FQDN signify?
+-> The domain name is an absolute FQDN.
+
+Which are default records of a zone?
+-> NS + SOA
+
+How frequently are you billed for Route 53 health checks?
+-> Per month and are based on the number of checks within the month.
+
+How many records of the same name does failover routing allow?
+-> 2
+
+What options are available when setting an A record?
+-> Ip values + Routing policy + TTL
+
+Which routing policy allows for multiple records of the same name that also perform health checks?
+-> Multivalue Answer
+
+S3 By default, replicated objects keep their: 
+- Storage class
+- Object name (key)
+- Owner
+- Object permissions
+
+What statements are true of S3 Cross-Region Replication (CRR)?
+-> It can change the ownership of objects and their storage tiers when going to the new region.
+
+When would you use a bucket policy?
+-> when granting bucket access to anonymous users
+-> when granting bucket access to IAM identities in a different AWS account
+
+What are the benefits of lifecycle rules?
+-> an automated way of moving objects between storage classes
+-> automatic deletion of objects
+
+S3 Transfer Acceleration enables fast, easy, and secure transfers of files over long distances between your client and an S3 bucket.
+
+S3 lifecycle rules can apply to:
+-> tags for buckets or objects
+-> prefix for buckets or objects
+-> buckets
+-> current or previous versions of an object
+
+Pick the statements that are true of a S3 hosted website.
+-> CORS should be enabled when one website references resource from another.
+-> CloudFront can be used with S3.
+-> Apache-like server access logs can be enabled.
+
+Which is true of the CloudFront architecture?
+-> An origin fetch occurs when an edge location and a regional edge cache do not have a copy of the requested content.
+-> Edge locations first reach out to the regional cache for a copy of the content before performing an origin fetch.
+
+Which S3 encryption type allows for role separation?
+-> SSE-KMS
+
+Architecturally, where do EFS mount targets sit?
+-> Inside a subnet
+
+Which RDS deployment method doesn't need network configuration between regions and will sync database instances asynchronously?
+-> Read replica
+
+Which RDS backup will remain even if the database is deleted?
+-> Automated backups
+-> Snapshot
+
+Which action can be taken if an RDS master is reaching its writing capacity?
+-> Scale the master vertically
+
+Which are true statements of a database management system?
+-> Database management systems contain storage, CPU, memory, and software used to manage data.
+-> Database management systems is a platform designed to manage data.
+
+A database's endpoint is:
+-> also known as a database CNAME
+-> A CNAME that can be used for the primary and standby instance during failover
+
+Which tier in has the highest priority in an Aurora failover?
+-> Tier 0
+
+Which is true of Aurora's backtrack feature?
+-> Backtrack allows you to roll back a database for up to 72 hours.
+-> You don't have to make a new cluster when using Aurora's backtrack feature to restore a database.
+
+What is the rate of billing for Aurora Serverless?
+-> Charges are based on database resources used per second.
+
+What is the maximum amount of replicas that Aurora can have?
+-> 15
+
+What are some limitations of using Aurora Serverless?
+-> Slightly longer loading time when a database cluster is paused.
+-> Slower failure switchover than Aurora Provisioned.
+-> Not accessible via a VPN or an inter-region VPC peer.
+
+What is a query editor?
+-> a web-based tool that allows you to log in to the Aurora Serverless cluster and executes queries
+
+What is a global database?
+-> An Aurora provisioning option which adds resiliency by allowing you to pick amongst all AWS regions as your secondary reader cluster.
+
+What is an Aurora Capacity Unit (ACU)?
+-> A unit of measurement for processing (compute) and memory in Aurora Serverless.
+
+GSIs can use a different ____ than the primary table. Please select the most appropriate answer.
+-> WCU, partition keys, RCU, sort keys
+
+Which are true statements of LSI (Local Secondary Indexes) in DynamoDB?
+-> Have to be enabled when the table is created
+-> Use a secondary sort key as an alternative way to view data in a table
+-> Use the same RCU and WCU as the table that it indexes
+
+Which is the maximum size for a DynamoDB Item and its attributes?
+-> 400KB
+
+Which are true statements of GSIs (Global Secondary Index) in DynamoDB?
+-> GSI has asynchronous data from the table
+-> GSIs can have their own WCU and RCU
+
+Which situations would call for the use of DynamoDB?
+-> When needing a web-scalable DBaaS product that provides integration with CloudWatch.
+-> When needing a lightweight, on-demand database product
+
+How many replicas does DynamoDB provide per table?
+-> DynamoDB has more than 2 replicas in each Availability Zone.
+
+One WCU is equal to _ of data when written to a table.
+-> 1KB
+
+The maximum amount of Global Secondary Indexes (GSI) per DynamoDB table is 20.
+
+Partitions are replicated across 3 Availability Zones.
+
+You can have up to 5 Local Secondary Indexes per table in DynamoDB.
+
+How can you match DynamoDB's capacity with unpredictable traffic patterns to achieve maximum cost efficiency?
+-> Enable auto-scaling for the DynamoDB tables
+
+Partitions are replicated across 3 Availability Zones.
+
+Which database can concurrently have multiple masters in multi-regions for reading and writing?
+-> DynamoDB
+
+Which are the characteristics of DynamoDB?
+-> tables have an assigned ARN
+-> it is a regional service
+
+In DynamoDB, which term describes a collection of attributes located inside a table?
+-> item
+
+Which service allows asynchronous messaging, the decoupling of application components, and provides the ability to scale different parts of an application?
+-> SQS
+
+To access the SNS service from inside a VPC, you would need:
+-> NAT Gateway
+-> IGW
+-> VPC endpoint
+
+What information is necessary to delete a message in an SQS queue?
+-> Receipt handle
+-> The queue URL
+
+What is the difference between Kinesis and SQS?
+-> Kinesis is used for large scale, real-time streaming while SQS is used for messaging.
+-> Kinesis uses streams and records to store data in, while SQS stores data in messages.
+-> Kinesis Streams are deleted based on their rolling retention window, while SQS messages should be deleted once consumed to avoid re-polling.
+
+When would you use Athena?
+-> large resource-intensive queries
+-> when needing to project your schema onto your S3 data at the time you execute a query
+-> ad-hoc queries to S3 that happen once a month or once a week
+
+When would you use Redshift?
+-> When needing an end-state repository for processed data.
+-> For scaling to unlimited load levels while storing petabytes worth of data.
+
+Which are true of CloudWatch?
+-> CloudWatch produces metrics which is a time-ordered set of data points.
+-> CloudWatch metrics can be configured with alarms to take action.
+-> CloudWatch is a repository service for metric data.
+
+What data does CloudWatch monitor by default?
+-> DynamoDB writes and reads
+-> EBS volume writes and reads
+-> EC2s Network usage
+-> EC2 CPU usage
+CloudWatch doesn't measure internal metrics. A CloudWatch agent must be added to the EC2 to monitor its memory.
+
+What permits a service to write logs to CloudWatch Logs?
+-> execution roles or permission roles
+
+A CloudWatch log group:
+-> can export and set streams into other AWS services.
+-> is where you can set the retention period.
+-> is where you set a metric filter.
+
+Which OpsWorks stack allows you to use both Linux and Windows-based operating systems?
+-> Chef 12 stack
+
+What are the characteristics of a DEK?
+-> DEKs are issued upon request.
+-> DEKs are generated using a CMK.
+
+What are the key architecture components within Elastic Beanstalk?
+-> an environment
+-> an application
+-> an application version
+
+Amazon Redshift uses a hierarchy of encryption keys to encrypt the database. You can use either AWS Key Management Service (AWS KMS) or a hardware security module (HSM) to manage the top-level encryption keys in this hierarchy.
+
+Adding Lifecycle Hooks to Auto Scaling group puts the instance into wait state before termination. Default wait period is 1 hour
+
+AWS Glacier Retrieval: Expedited retrieval allow to access data in 1-5min with $0.03 per GB. The Valt Lock + Standard Retrieval take 3-5 hour while Bulk retrieval is cheapest option have 5-12 hours retrieval time.
+
+
+
+
+
+
+
+
+
+
+
